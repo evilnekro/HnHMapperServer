@@ -709,8 +709,7 @@ div[class*="mud-tabs-toolbar"] {
    TYPOGRAPHY ENHANCEMENT - Readable Headings
    ============================================ */
 
-/* MudBlazor Typography - All headings */
-.mud-typography,
+/* MudBlazor Typography - Heading-specific classes only */
 .mud-typography-h1,
 .mud-typography-h2,
 .mud-typography-h3,
@@ -755,12 +754,15 @@ h1, h2, h3, h4, h5, h6 {
         1px 1px 3px rgba(0, 0, 0, 0.4) !important;
 }
 
-/* Body text - Keep dark for readability on light backgrounds */
+/* Body text - Keep dark for readability on light backgrounds, no shadows */
 .mud-typography-body1,
 .mud-typography-body2,
 .mud-typography.mud-typography-body1,
-.mud-typography.mud-typography-body2 {
+.mud-typography.mud-typography-body2,
+.mud-text.mud-typography-body1,
+.mud-text.mud-typography-body2 {
     color: #424242 !important;
+    text-shadow: none !important;
 }
 
 /* Icons within headings - Match heading color */
