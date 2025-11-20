@@ -34,6 +34,11 @@ public static class IdentityEndpoints
 		app.MapPost("/api/user/tokens", CreateOwnToken)
 			.RequireAuthorization()
 			.DisableAntiforgery();
+
+		// User self-service password change endpoint
+		group.MapPost("/change-password", ChangePassword)
+			.RequireAuthorization()
+			.DisableAntiforgery();
 	}
 
 	private static async Task<IResult> Login(
@@ -367,6 +372,44 @@ public static class IdentityEndpoints
 		return Results.Ok(new { Success = true, Token = fullToken, Url = url });
 	}
 
+	// POST /api/auth/change-password - change own password
+	private static async Task<IResult> ChangePassword(
+		[FromBody] ChangePasswordRequest request,
+		ClaimsPrincipal user,
+		UserManager<IdentityUser> userManager,
+		ILogger<object> logger)
+	{
+		// Validate inputs
+		if (string.IsNullOrWhiteSpace(request.CurrentPassword) || string.IsNullOrWhiteSpace(request.NewPassword))
+			return Results.BadRequest(new { error = "Current password and new password are required" });
+
+		// Validate new password length
+		if (request.NewPassword.Length < 6)
+			return Results.BadRequest(new { error = "New password must be at least 6 characters long" });
+
+		// Get current user
+		var userName = user.Identity?.Name;
+		if (string.IsNullOrEmpty(userName))
+			return Results.Unauthorized();
+
+		var identityUser = await userManager.FindByNameAsync(userName);
+		if (identityUser == null)
+			return Results.Unauthorized();
+
+		// Attempt to change password
+		var result = await userManager.ChangePasswordAsync(identityUser, request.CurrentPassword, request.NewPassword);
+
+		if (!result.Succeeded)
+		{
+			var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+			logger.LogWarning("Password change failed for user {Username}: {Errors}", userName, errors);
+			return Results.BadRequest(new { error = errors });
+		}
+
+		logger.LogInformation("Password changed successfully for user {Username}", userName);
+		return Results.Ok(new { message = "Password changed successfully" });
+	}
+
 	private static string ComputeSha256(string value)
 	{
 		using var sha = SHA256.Create();
@@ -390,5 +433,11 @@ public static class IdentityEndpoints
 	public sealed class SelectTenantRequest
 	{
 		public string TenantId { get; set; } = string.Empty;
+	}
+
+	public sealed class ChangePasswordRequest
+	{
+		public string CurrentPassword { get; set; } = string.Empty;
+		public string NewPassword { get; set; } = string.Empty;
 	}
 }

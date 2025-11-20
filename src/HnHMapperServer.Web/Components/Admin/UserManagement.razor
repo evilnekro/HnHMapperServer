@@ -67,6 +67,12 @@
                                        OnClick="@(() => ShowEditUserPermissionsDialog(context.Item))"
                                        Disabled="@context.Item.PendingApproval"
                                        Title="@(context.Item.PendingApproval ? "Approve user first" : "Edit permissions")" />
+                        <MudIconButton Icon="@Icons.Material.Filled.VpnKey"
+                                       Size="Size.Small"
+                                       Color="Color.Warning"
+                                       OnClick="@(() => ShowResetPasswordDialog(context.Item))"
+                                       Disabled="@context.Item.PendingApproval"
+                                       Title="@(context.Item.PendingApproval ? "Approve user first" : "Reset password")" />
                         <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                        Size="Size.Small"
                                        Color="Color.Error"
@@ -202,6 +208,39 @@
             // Reload the user list to reflect updated permissions
             await LoadUsers();
         }
+    }
+
+    private async Task ShowResetPasswordDialog(TenantUserDto user)
+    {
+        var tenantId = TenantContext.CurrentTenant?.Id;
+        if (string.IsNullOrEmpty(tenantId))
+        {
+            var tenants = await TenantContext.GetTenantsAsync();
+            tenantId = tenants.FirstOrDefault()?.Id;
+        }
+
+        if (string.IsNullOrEmpty(tenantId))
+        {
+            Snackbar.Add("No tenant context available", Severity.Error);
+            return;
+        }
+
+        var parameters = new DialogParameters<ChangeUserPasswordDialog>
+        {
+            { x => x.Username, user.Username },
+            { x => x.UserId, user.UserId },
+            { x => x.TenantId, tenantId },
+            { x => x.IsSuperAdmin, false }
+        };
+
+        var dialog = await DialogService.ShowAsync<ChangeUserPasswordDialog>(
+            "Reset User Password",
+            parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+
+        var result = await dialog.Result;
+
+        // No need to reload users list after password change - nothing changes in the user list
     }
 
     private async Task ShowRemoveUserDialog(TenantUserDto user)

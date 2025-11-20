@@ -29,6 +29,9 @@ public static class TenantAdminEndpoints
         // POST /api/tenants/{tenantId}/users/{userId}/approve - Approve pending user
         group.MapPost("/users/{userId}/approve", ApproveUser);
 
+        // POST /api/tenants/{tenantId}/users/{userId}/password - Reset user password (admin only)
+        group.MapPost("/users/{userId}/password", ResetUserPassword);
+
         // GET /api/tenants/{tenantId}/users - List all users in tenant
         group.MapGet("/users", GetTenantUsers);
 
@@ -241,6 +244,79 @@ public static class TenantAdminEndpoints
         });
 
         return Results.Ok(new { message = "User approved successfully" });
+    }
+
+    /// <summary>
+    /// POST /api/tenants/{tenantId}/users/{userId}/password
+    /// Resets a user's password (admin only).
+    /// </summary>
+    private static async Task<IResult> ResetUserPassword(
+        string tenantId,
+        string userId,
+        ResetUserPasswordDto dto,
+        ApplicationDbContext db,
+        UserManager<IdentityUser> userManager,
+        HttpContext context,
+        IAuditService auditService,
+        ILogger<Program> logger)
+    {
+        // Verify user has access to this tenant (unless SuperAdmin)
+        if (!context.User.IsInRole(AuthorizationConstants.Roles.SuperAdmin))
+        {
+            var currentTenantId = context.User.FindFirst(AuthorizationConstants.ClaimTypes.TenantId)?.Value;
+            if (currentTenantId != tenantId)
+            {
+                return Results.Forbid();
+            }
+        }
+
+        // Validate new password
+        if (string.IsNullOrWhiteSpace(dto.NewPassword))
+            return Results.BadRequest(new { error = "New password is required" });
+
+        if (dto.NewPassword.Length < 6)
+            return Results.BadRequest(new { error = "Password must be at least 6 characters long" });
+
+        // Verify user exists in this tenant
+        var tenantUser = await db.TenantUsers
+            .FirstOrDefaultAsync(tu => tu.UserId == userId && tu.TenantId == tenantId);
+
+        if (tenantUser == null)
+        {
+            return Results.NotFound(new { error = "User not found in this tenant" });
+        }
+
+        // Get the identity user
+        var identityUser = await userManager.FindByIdAsync(userId);
+        if (identityUser == null)
+        {
+            return Results.NotFound(new { error = "User not found" });
+        }
+
+        // Generate password reset token and reset password
+        var resetToken = await userManager.GeneratePasswordResetTokenAsync(identityUser);
+        var result = await userManager.ResetPasswordAsync(identityUser, resetToken, dto.NewPassword);
+
+        if (!result.Succeeded)
+        {
+            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+            logger.LogWarning("Password reset failed for user {UserId} in tenant {TenantId}: {Errors}", userId, tenantId, errors);
+            return Results.BadRequest(new { error = errors });
+        }
+
+        logger.LogInformation("Password reset successfully for user {UserId} in tenant {TenantId} by admin", userId, tenantId);
+
+        // Audit log
+        await auditService.LogAsync(new AuditEntry
+        {
+            TenantId = tenantId,
+            Action = "PasswordReset",
+            EntityType = "User",
+            EntityId = userId,
+            NewValue = "Password reset by admin"
+        });
+
+        return Results.Ok(new { message = "Password reset successfully" });
     }
 
     /// <summary>
@@ -779,5 +855,13 @@ public static class TenantAdminEndpoints
     public sealed class SetMainMapDto
     {
         public int? MapId { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for resetting user password
+    /// </summary>
+    public sealed class ResetUserPasswordDto
+    {
+        public string NewPassword { get; set; } = string.Empty;
     }
 }
