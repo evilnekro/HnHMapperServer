@@ -69,7 +69,10 @@ builder.Services.AddDbContext<HnHMapperServer.Infrastructure.Data.ApplicationDbC
     // Diagnostic logging removed to reduce noise during tile serving
     // Database path and GridStorage were already logged at startup
 
-    options.UseSqlite($"Data Source={fullPath}");
+    options.UseSqlite($"Data Source={fullPath};Mode=ReadWriteCreate;Cache=Shared;Pooling=True", sqliteOptions =>
+    {
+        sqliteOptions.CommandTimeout(30); // 30 second timeout
+    });
 
     // Disable EF Core command logging completely
     options.ConfigureWarnings(warnings =>

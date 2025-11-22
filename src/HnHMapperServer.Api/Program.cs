@@ -65,7 +65,7 @@ else if (!Path.IsPathRooted(gridStorage))
     // Resolve relative GridStorage consistently to solution-level path
     gridStorage = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", gridStorage));
 }
-var connectionString = $"Data Source={Path.Combine(gridStorage, "grids.db")}";
+var connectionString = $"Data Source={Path.Combine(gridStorage, "grids.db")};Mode=ReadWriteCreate;Cache=Shared;Pooling=True";
 
 builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
 {
@@ -75,7 +75,10 @@ builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
         options.EnableDetailedErrors();
         options.EnableSensitiveDataLogging();
     }
-    options.UseSqlite(connectionString);
+    options.UseSqlite(connectionString, sqliteOptions =>
+    {
+        sqliteOptions.CommandTimeout(30); // 30 second timeout
+    });
 
     // Disable EF Core command logging completely
     options.ConfigureWarnings(warnings =>

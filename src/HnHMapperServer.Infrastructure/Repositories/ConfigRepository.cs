@@ -128,14 +128,27 @@ public class ConfigRepository : IConfigRepository
     /// <summary>
     /// Get a global configuration value (not tenant-scoped).
     /// Used for system-wide settings like URL prefix.
+    /// FALLBACK: If __global__ doesn't exist, returns first value from any tenant.
     /// </summary>
     public async Task<string?> GetGlobalValueAsync(string key)
     {
-        // Bypass tenant filter and explicitly query for global config
+        // Try to get from __global__ tenant first
         var entity = await _context.Config
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(c => c.Key == key && c.TenantId == "__global__");
-        return entity?.Value;
+
+        if (entity != null)
+            return entity.Value;
+
+        // FALLBACK: If __global__ doesn't exist yet, get from any tenant
+        // This provides backwards compatibility during migration
+        var fallback = await _context.Config
+            .IgnoreQueryFilters()
+            .Where(c => c.Key == key)
+            .Select(c => c.Value)
+            .FirstOrDefaultAsync();
+
+        return fallback;
     }
 
     /// <summary>

@@ -11,19 +11,31 @@ namespace HnHMapperServer.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             // Consolidate 'prefix' config from all tenants into a single global config
-            // Strategy: Take the first non-null prefix value we find, create global entry, delete tenant-specific entries
+            // Strategy:
+            // 1. Create __global__ tenant if it doesn't exist
+            // 2. Take the first non-null prefix value we find
+            // 3. Create global config entry
+            // 4. Delete tenant-specific entries
+            //
+            // NOTE: Using suppressTransaction to avoid EF Core migration locks in SQLite
 
-            migrationBuilder.Sql(@"
-                -- Create global prefix config entry using first available prefix value
-                INSERT INTO Config (Key, TenantId, Value)
-                SELECT 'prefix', '__global__', Value
-                FROM Config
-                WHERE Key = 'prefix'
-                LIMIT 1;
+            migrationBuilder.Sql(
+                "INSERT INTO Tenants (Id, Name, StorageQuotaMB, CurrentStorageMB, CreatedAt, IsActive) " +
+                "SELECT '__global__', 'Global System Settings', 0, 0, datetime('now'), 1 " +
+                "WHERE NOT EXISTS (SELECT 1 FROM Tenants WHERE Id = '__global__');",
+                suppressTransaction: true);
 
-                -- Delete all tenant-specific prefix entries
-                DELETE FROM Config WHERE Key = 'prefix' AND TenantId != '__global__';
-            ");
+            migrationBuilder.Sql(
+                "INSERT INTO Config (Key, TenantId, Value) " +
+                "SELECT 'prefix', '__global__', Value " +
+                "FROM Config " +
+                "WHERE Key = 'prefix' " +
+                "LIMIT 1;",
+                suppressTransaction: true);
+
+            migrationBuilder.Sql(
+                "DELETE FROM Config WHERE Key = 'prefix' AND TenantId != '__global__';",
+                suppressTransaction: true);
         }
 
         /// <inheritdoc />
@@ -32,17 +44,23 @@ namespace HnHMapperServer.Infrastructure.Migrations
             // Rollback: Delete global prefix and restore tenant-specific ones
             // Note: We can't perfectly restore the old state, but we can create a default entry for each tenant
 
-            migrationBuilder.Sql(@"
-                -- Get the global prefix value
-                -- Re-create tenant-specific prefix entries for all existing tenants
-                INSERT INTO Config (Key, TenantId, Value)
-                SELECT 'prefix', t.Id, (SELECT Value FROM Config WHERE Key = 'prefix' AND TenantId = '__global__')
-                FROM Tenants t
-                WHERE NOT EXISTS (SELECT 1 FROM Config WHERE Key = 'prefix' AND TenantId = t.Id);
+            migrationBuilder.Sql(
+                "INSERT INTO Config (Key, TenantId, Value) " +
+                "SELECT 'prefix', t.Id, (SELECT Value FROM Config WHERE Key = 'prefix' AND TenantId = '__global__') " +
+                "FROM Tenants t " +
+                "WHERE t.Id != '__global__' " +
+                "  AND NOT EXISTS (SELECT 1 FROM Config WHERE Key = 'prefix' AND TenantId = t.Id);",
+                suppressTransaction: true);
 
-                -- Delete global prefix entry
-                DELETE FROM Config WHERE Key = 'prefix' AND TenantId = '__global__';
-            ");
+            migrationBuilder.Sql(
+                "DELETE FROM Config WHERE Key = 'prefix' AND TenantId = '__global__';",
+                suppressTransaction: true);
+
+            migrationBuilder.Sql(
+                "DELETE FROM Tenants " +
+                "WHERE Id = '__global__' " +
+                "  AND NOT EXISTS (SELECT 1 FROM Config WHERE TenantId = '__global__');",
+                suppressTransaction: true);
         }
     }
 }

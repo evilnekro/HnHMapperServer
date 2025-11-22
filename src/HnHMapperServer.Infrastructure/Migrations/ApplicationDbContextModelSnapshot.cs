@@ -67,7 +67,7 @@ namespace HnHMapperServer.Infrastructure.Migrations
 
                     b.HasIndex("UserId", "Timestamp");
 
-                    b.ToTable("AuditLogs");
+                    b.ToTable("AuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("HnHMapperServer.Core.Models.TenantEntity", b =>
@@ -105,7 +105,7 @@ namespace HnHMapperServer.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tenants");
+                    b.ToTable("Tenants", (string)null);
                 });
 
             modelBuilder.Entity("HnHMapperServer.Core.Models.TenantInvitationEntity", b =>
@@ -158,7 +158,7 @@ namespace HnHMapperServer.Infrastructure.Migrations
 
                     b.HasIndex("Status", "ExpiresAt");
 
-                    b.ToTable("TenantInvitations");
+                    b.ToTable("TenantInvitations", (string)null);
                 });
 
             modelBuilder.Entity("HnHMapperServer.Core.Models.TenantPermissionEntity", b =>
@@ -181,7 +181,7 @@ namespace HnHMapperServer.Infrastructure.Migrations
 
                     b.HasIndex("TenantUserId");
 
-                    b.ToTable("TenantPermissions");
+                    b.ToTable("TenantPermissions", (string)null);
                 });
 
             modelBuilder.Entity("HnHMapperServer.Core.Models.TenantUserEntity", b =>
@@ -216,7 +216,7 @@ namespace HnHMapperServer.Infrastructure.Migrations
                     b.HasIndex("TenantId", "UserId")
                         .IsUnique();
 
-                    b.ToTable("TenantUsers");
+                    b.ToTable("TenantUsers", (string)null);
                 });
 
             modelBuilder.Entity("HnHMapperServer.Infrastructure.Data.ConfigEntity", b =>
@@ -235,7 +235,7 @@ namespace HnHMapperServer.Infrastructure.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Config");
+                    b.ToTable("Config", (string)null);
                 });
 
             modelBuilder.Entity("HnHMapperServer.Infrastructure.Data.CustomMarkerEntity", b =>
@@ -312,7 +312,7 @@ namespace HnHMapperServer.Infrastructure.Migrations
                     b.HasIndex("MapId", "CoordX", "CoordY", "X", "Y")
                         .IsUnique();
 
-                    b.ToTable("CustomMarkers");
+                    b.ToTable("CustomMarkers", (string)null);
                 });
 
             modelBuilder.Entity("HnHMapperServer.Infrastructure.Data.GridDataEntity", b =>
@@ -341,7 +341,7 @@ namespace HnHMapperServer.Infrastructure.Migrations
 
                     b.HasIndex("Map", "CoordX", "CoordY");
 
-                    b.ToTable("Grids");
+                    b.ToTable("Grids", (string)null);
                 });
 
             modelBuilder.Entity("HnHMapperServer.Infrastructure.Data.MapInfoEntity", b =>
@@ -375,7 +375,7 @@ namespace HnHMapperServer.Infrastructure.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Maps");
+                    b.ToTable("Maps", (string)null);
                 });
 
             modelBuilder.Entity("HnHMapperServer.Infrastructure.Data.MarkerEntity", b =>
@@ -431,7 +431,7 @@ namespace HnHMapperServer.Infrastructure.Migrations
                     b.HasIndex("Key", "TenantId")
                         .IsUnique();
 
-                    b.ToTable("Markers");
+                    b.ToTable("Markers", (string)null);
                 });
 
             modelBuilder.Entity("HnHMapperServer.Infrastructure.Data.NotificationEntity", b =>
@@ -498,7 +498,7 @@ namespace HnHMapperServer.Infrastructure.Migrations
 
                     b.HasIndex("TenantId", "UserId", "IsRead");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("HnHMapperServer.Infrastructure.Data.NotificationPreferenceEntity", b =>
@@ -540,7 +540,7 @@ namespace HnHMapperServer.Infrastructure.Migrations
                     b.HasIndex("UserId", "NotificationType")
                         .IsUnique();
 
-                    b.ToTable("NotificationPreferences");
+                    b.ToTable("NotificationPreferences", (string)null);
                 });
 
             modelBuilder.Entity("HnHMapperServer.Infrastructure.Data.PingEntity", b =>
@@ -590,7 +590,7 @@ namespace HnHMapperServer.Infrastructure.Migrations
 
                     b.HasIndex("TenantId", "ExpiresAt");
 
-                    b.ToTable("Pings");
+                    b.ToTable("Pings", (string)null);
                 });
 
             modelBuilder.Entity("HnHMapperServer.Infrastructure.Data.TileDataEntity", b =>
@@ -637,7 +637,7 @@ namespace HnHMapperServer.Infrastructure.Migrations
                     b.HasIndex("MapId", "Zoom", "CoordX", "CoordY")
                         .IsUnique();
 
-                    b.ToTable("Tiles");
+                    b.ToTable("Tiles", (string)null);
                 });
 
             modelBuilder.Entity("HnHMapperServer.Infrastructure.Data.TimerEntity", b =>
@@ -710,7 +710,7 @@ namespace HnHMapperServer.Infrastructure.Migrations
 
                     b.HasIndex("TenantId", "UserId", "IsCompleted");
 
-                    b.ToTable("Timers");
+                    b.ToTable("Timers", (string)null);
                 });
 
             modelBuilder.Entity("HnHMapperServer.Infrastructure.Data.TimerHistoryEntity", b =>
@@ -761,7 +761,7 @@ namespace HnHMapperServer.Infrastructure.Migrations
 
                     b.HasIndex("TenantId", "Type", "CompletedAt");
 
-                    b.ToTable("TimerHistory");
+                    b.ToTable("TimerHistory", (string)null);
                 });
 
             modelBuilder.Entity("HnHMapperServer.Infrastructure.Data.TimerWarningEntity", b =>
@@ -786,7 +786,7 @@ namespace HnHMapperServer.Infrastructure.Migrations
                     b.HasIndex("TimerId", "WarningMinutes")
                         .IsUnique();
 
-                    b.ToTable("TimerWarnings");
+                    b.ToTable("TimerWarnings", (string)null);
                 });
 
             modelBuilder.Entity("HnHMapperServer.Infrastructure.Data.TokenEntity", b =>
@@ -841,7 +841,7 @@ namespace HnHMapperServer.Infrastructure.Migrations
                     b.HasIndex("UserId", "Name")
                         .IsUnique();
 
-                    b.ToTable("Tokens");
+                    b.ToTable("Tokens", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
