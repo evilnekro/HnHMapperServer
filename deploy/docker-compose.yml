@@ -100,7 +100,7 @@ services:
   web:
     # Pull image from GitHub Container Registry
     # Replace OWNER with your GitHub username or organization
-    image: ghcr.io/OWNER/hnhmapper-web:main
+    image: ghcr.io/evilnekro/hnhmapper-web:main
     
     # Build configuration (used when building locally instead of pulling from registry)
     # Uncomment 'build' section and comment out 'image' to build locally
